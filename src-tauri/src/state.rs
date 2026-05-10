@@ -57,6 +57,12 @@ pub fn get_default_settings() -> HashMap<String, serde_json::Value> {
     // Keyboard shortcuts setting
     settings.insert("shortcuts_enabled".to_string(), serde_json::json!(true));
     
+    // Individual shortcut toggles (all enabled by default)
+    settings.insert("shortcut_start_enabled".to_string(), serde_json::json!(true));
+    settings.insert("shortcut_pause_enabled".to_string(), serde_json::json!(true));
+    settings.insert("shortcut_break_enabled".to_string(), serde_json::json!(true));
+    settings.insert("shortcut_skip_enabled".to_string(), serde_json::json!(true));
+    
     settings
 }
 

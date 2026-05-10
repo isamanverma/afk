@@ -4,23 +4,32 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 use crate::commands;
 use crate::state::AppState;
 
-/// Register global keyboard shortcuts
+/// Shortcut definitions with individual settings keys
+const SHORTCUTS: &[(&str, &str, &str)] = &[
+    ("CommandOrControl+Shift+N", "Start session", "shortcut_start_enabled"),
+    ("CommandOrControl+Shift+P", "Pause/Resume", "shortcut_pause_enabled"),
+    ("CommandOrControl+Shift+B", "Take/End break", "shortcut_break_enabled"),
+    ("CommandOrControl+Shift+S", "Skip break", "shortcut_skip_enabled"),
+];
+
+/// Register global keyboard shortcuts based on settings
 pub fn register_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    // Check if shortcuts are enabled in settings
     let state = app.state::<AppState>();
+    
+    // Check master toggle
     if !state.get_setting_bool("shortcuts_enabled") {
         println!("⌨️  Keyboard shortcuts disabled in settings");
         return Ok(());
     }
     
-    let shortcuts_to_register = [
-        ("CommandOrControl+Shift+B", "Take break"),
-        ("CommandOrControl+Shift+P", "Pause/Resume"),
-        ("CommandOrControl+Shift+S", "Skip break"),
-        ("CommandOrControl+Shift+N", "Start session"),
-    ];
-    
-    for (shortcut_str, name) in shortcuts_to_register {
+    // Register individual shortcuts based on their toggles
+    for (shortcut_str, name, setting_key) in SHORTCUTS {
+        let enabled = state.get_setting_bool(setting_key);
+        if !enabled {
+            println!("⊘ Skipping shortcut: {} ({})", shortcut_str, name);
+            continue;
+        }
+        
         match shortcut_str.parse::<Shortcut>() {
             Ok(shortcut) => {
                 match app.global_shortcut().register(shortcut.clone()) {
@@ -35,11 +44,21 @@ pub fn register_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+/// Unregister all shortcuts (called when setting changes)
+pub fn unregister_all_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    for (shortcut_str, _, _) in SHORTCUTS {
+        if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
+            let _ = app.global_shortcut().unregister(shortcut);
+        }
+    }
+    println!("⌨️  Unregistered all shortcuts");
+    Ok(())
+}
+
 /// Handle a triggered shortcut (called from main.rs)
 /// macOS format: "shift+super+KeyX" where X is the letter
-/// All shortcuts work as toggles
 pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, shortcut: &str) {
-    // Check if shortcuts are enabled
+    // Check master toggle
     let state = app.state::<AppState>();
     if !state.get_setting_bool("shortcuts_enabled") {
         return;
@@ -65,7 +84,6 @@ pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, short
     
     match action {
         Some("break") => {
-            // Toggle: if on break → end break, else → take break
             if state.is_on_break() {
                 println!("→ End break (toggle)");
                 let _ = commands::end_break(app.clone()).await;
@@ -77,7 +95,6 @@ pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, short
             }
         }
         Some("pause") => {
-            // Toggle: pause ↔ resume
             let session = state.get_session();
             if session.paused {
                 println!("→ Resume session");
@@ -90,7 +107,6 @@ pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, short
             }
         }
         Some("skip") => {
-            // Skip current break
             if state.is_on_break() {
                 println!("→ Skip break");
                 let _ = commands::skip_break(app.clone()).await;
@@ -99,7 +115,6 @@ pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, short
             }
         }
         Some("start") => {
-            // Toggle: start ↔ end session
             if state.is_on_break() {
                 println!("→ End break & start session");
                 let _ = commands::end_break(app.clone()).await;
@@ -116,4 +131,3 @@ pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, short
         }
     }
 }
-

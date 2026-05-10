@@ -112,12 +112,12 @@ function ResetSettings() {
   );
 }
 
-// Keyboard shortcut display
+// Keyboard shortcut definitions with setting keys
 const SHORTCUTS = [
-  { keys: '⌘ ⇧ N', action: 'Start / End session' },
-  { keys: '⌘ ⇧ P', action: 'Pause / Resume' },
-  { keys: '⌘ ⇧ B', action: 'Take / End break' },
-  { keys: '⌘ ⇧ S', action: 'Skip break' },
+  { keys: '⌘ ⇧ N', action: 'Start / End session', setting: 'shortcut_start_enabled' },
+  { keys: '⌘ ⇧ P', action: 'Pause / Resume', setting: 'shortcut_pause_enabled' },
+  { keys: '⌘ ⇧ B', action: 'Take / End break', setting: 'shortcut_break_enabled' },
+  { keys: '⌘ ⇧ S', action: 'Skip break', setting: 'shortcut_skip_enabled' },
 ];
 
 function KeyboardShortcutsSettings() {
@@ -138,15 +138,25 @@ function KeyboardShortcutsSettings() {
         />
       </div>
       {shortcutsEnabled && (
-        <div className="space-y-2 pl-1">
-          {SHORTCUTS.map((shortcut) => (
-            <div key={shortcut.keys} className="flex items-center justify-between">
-              <span className="text-sm text-neutral-400">{shortcut.action}</span>
-              <kbd className="px-2 py-1 text-xs font-mono bg-neutral-800 text-neutral-300 rounded border border-neutral-700">
-                {shortcut.keys}
-              </kbd>
-            </div>
-          ))}
+        <div className="space-y-3 pl-1">
+          {SHORTCUTS.map((shortcut) => {
+            const [enabled, setEnabled] = useSetting<boolean>(shortcut.setting, true);
+            return (
+              <div key={shortcut.keys} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={enabled}
+                    onCheckedChange={setEnabled}
+                    className="scale-90"
+                  />
+                  <span className="text-sm text-neutral-400">{shortcut.action}</span>
+                </div>
+                <kbd className="px-2 py-1 text-xs font-mono bg-neutral-800 text-neutral-300 rounded border border-neutral-700 ml-2">
+                  {shortcut.keys}
+                </kbd>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -103,6 +103,15 @@ pub async fn set_setting<R: Runtime>(
                 }
             }
         }
+        // Re-register shortcuts when any shortcut setting changes
+        "shortcuts_enabled" | "shortcut_start_enabled" | "shortcut_pause_enabled" 
+        | "shortcut_break_enabled" | "shortcut_skip_enabled" => {
+            use crate::shortcuts;
+            // Unregister all existing shortcuts first
+            let _ = shortcuts::unregister_all_shortcuts(&app);
+            // Re-register based on current settings
+            let _ = shortcuts::register_shortcuts(&app);
+        }
         _ => {}
     }
     
