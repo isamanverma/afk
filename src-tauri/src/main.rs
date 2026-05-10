@@ -58,7 +58,7 @@ fn main() {
             power_monitor::init(app.handle().clone());
             
             // Initialize global keyboard shortcuts
-            shortcuts::register_shortcuts(app)?;
+            shortcuts::register_shortcuts(app.handle())?;
             
             // Request notification permission on macOS
             let _ = app.notification().request_permission();

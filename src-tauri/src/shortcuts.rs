@@ -1,11 +1,18 @@
-use tauri::{App, Manager};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 use crate::commands;
 use crate::state::AppState;
 
 /// Register global keyboard shortcuts
-pub fn register_shortcuts(app: &App) -> Result<(), Box<dyn std::error::Error>> {
+pub fn register_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    // Check if shortcuts are enabled in settings
+    let state = app.state::<AppState>();
+    if !state.get_setting_bool("shortcuts_enabled") {
+        println!("⌨️  Keyboard shortcuts disabled in settings");
+        return Ok(());
+    }
+    
     let shortcuts_to_register = [
         ("CommandOrControl+Shift+B", "Take break"),
         ("CommandOrControl+Shift+P", "Pause/Resume"),
@@ -32,8 +39,13 @@ pub fn register_shortcuts(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 /// macOS format: "shift+super+KeyX" where X is the letter
 /// All shortcuts work as toggles
 pub async fn handle_shortcut<R: tauri::Runtime>(app: &tauri::AppHandle<R>, shortcut: &str) {
-    println!("Shortcut triggered: {}", shortcut);
+    // Check if shortcuts are enabled
     let state = app.state::<AppState>();
+    if !state.get_setting_bool("shortcuts_enabled") {
+        return;
+    }
+    
+    println!("Shortcut triggered: {}", shortcut);
     
     // Extract the key from format like "shift+super+KeyB" or "Shift+Command+B"
     let s = shortcut.to_uppercase();

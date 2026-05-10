@@ -19,6 +19,8 @@ import {
   Keyboard,
 } from 'lucide-react';
 import type { StatsResponse } from './lib/tauri-bridge';
+import { Switch } from './components/ui/switch';
+import { useSetting } from './hooks/useSetting';
 
 // X (Twitter) icon - custom SVG since lucide doesn't have the new X logo
 const XIcon = ({ className }: { className?: string }) => (
@@ -118,25 +120,35 @@ const SHORTCUTS = [
   { keys: '⌘ ⇧ S', action: 'Skip break' },
 ];
 
-function KeyboardShortcuts() {
+function KeyboardShortcutsSettings() {
+  const [shortcutsEnabled, setShortcutsEnabled] = useSetting<boolean>('shortcuts_enabled', true);
+  
   return (
     <div className="w-full">
-      <Label className="flex flex-col space-y-1 mb-3">
-        <span>Keyboard shortcuts</span>
-        <span className="font-normal text-muted-foreground text-xs">
-          Global hotkeys work even when AFK is in background
-        </span>
-      </Label>
-      <div className="space-y-2">
-        {SHORTCUTS.map((shortcut) => (
-          <div key={shortcut.keys} className="flex items-center justify-between">
-            <span className="text-sm text-neutral-400">{shortcut.action}</span>
-            <kbd className="px-2 py-1 text-xs font-mono bg-neutral-800 text-neutral-300 rounded border border-neutral-700">
-              {shortcut.keys}
-            </kbd>
-          </div>
-        ))}
+      <div className="flex items-center justify-between space-x-2 mb-3">
+        <Label className="flex flex-col space-y-1">
+          <span>Keyboard shortcuts</span>
+          <span className="font-normal text-muted-foreground text-xs">
+            Global hotkeys work even when AFK is in background
+          </span>
+        </Label>
+        <Switch
+          checked={shortcutsEnabled}
+          onCheckedChange={setShortcutsEnabled}
+        />
       </div>
+      {shortcutsEnabled && (
+        <div className="space-y-2 pl-1">
+          {SHORTCUTS.map((shortcut) => (
+            <div key={shortcut.keys} className="flex items-center justify-between">
+              <span className="text-sm text-neutral-400">{shortcut.action}</span>
+              <kbd className="px-2 py-1 text-xs font-mono bg-neutral-800 text-neutral-300 rounded border border-neutral-700">
+                {shortcut.keys}
+              </kbd>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -369,11 +381,11 @@ function Settings({
               </div>
               <div className="pt-4" />
               <Separator className="my-4" />
-              <div className="pt-4" />
-              <div className="flex items-start gap-x-8 [&>div]:w-full">
-                <Keyboard width={20} height={20} className="mt-1" />
-                <KeyboardShortcuts />
-              </div>
+<div className="pt-4" />
+               <div className="flex items-start gap-x-8 [&>div]:w-full">
+                 <Keyboard width={20} height={20} className="mt-1" />
+                 <KeyboardShortcutsSettings />
+               </div>
             </TabsContent>
             <TabsContent value="stats">
               <div className="pt-4 max-w-md mx-auto">

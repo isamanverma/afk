@@ -54,6 +54,9 @@ pub fn get_default_settings() -> HashMap<String, serde_json::Value> {
     settings.insert("chime_on_break_end".to_string(), serde_json::json!(true));
     settings.insert("chime_on_reminder".to_string(), serde_json::json!(false));
     
+    // Keyboard shortcuts setting
+    settings.insert("shortcuts_enabled".to_string(), serde_json::json!(true));
+    
     settings
 }
 
